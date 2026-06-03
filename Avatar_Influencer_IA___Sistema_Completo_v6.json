@@ -1,0 +1,4464 @@
+{
+  "name": "Avatar Influencer IA — Sistema Completo v4",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message",
+          "callback_query"
+        ],
+        "additionalFields": {}
+      },
+      "id": "d022b14b-931b-4b46-8010-f8e1779c0edf",
+      "name": "Telegram — Recibir mensaje",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -25264,
+        41440
+      ],
+      "webhookId": "avatar-influencer-main",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "chat_id",
+              "value": "={{ $json.message?.chat?.id ?? $json.callback_query?.message?.chat?.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "mensaje_raw",
+              "value": "={{ $json.message?.text ?? $json.callback_query?.data ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f3",
+              "name": "from_id",
+              "value": "={{ $json.message?.from?.id ?? $json.callback_query?.from?.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "fecha",
+              "value": "={{ new Date().toISOString().slice(0,10) }}",
+              "type": "string"
+            },
+            {
+              "id": "f5",
+              "name": "hora",
+              "value": "={{ new Date().toISOString().slice(0,16).replace('T',' ') }}",
+              "type": "string"
+            },
+            {
+              "id": "f6",
+              "name": "callback_query_id",
+              "value": "={{ $json.callback_query?.id ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f7",
+              "name": "is_callback",
+              "value": "={{ $json.callback_query !== undefined }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "95794ae9-6389-4ff1-874b-2384a5e7c044",
+      "name": "Extraer datos del mensaje",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -25072,
+        41440
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg        = $input.item.json.mensaje_raw || '';\nconst admin_id   = $vars.USER_ID_TELEGRAM;\nconst from_id    = String($input.item.json.from_id);\nconst es_admin   = from_id === admin_id;\nconst is_callback = $input.item.json.is_callback || false;\n\nlet comando  = 'mensaje_libre';\nlet argumento = msg;\n\n// Callbacks de botones inline — vienen como \"cmd:argumento\" o solo \"cmd\"\nif (is_callback) {\n  const parts = msg.split(':');\n  comando   = parts[0] || 'ayuda';\n  argumento = parts.slice(1).join(':').trim();\n} else if (msg.startsWith('/instruccion_off')) {\n  comando   = 'instruccion_off';\n  argumento = msg.replace('/instruccion_off', '').trim();\n} else if (msg.startsWith('/instruccion')) {\n  comando   = 'instruccion';\n  argumento = msg.replace('/instruccion', '').trim();\n} else if (msg.startsWith('/avatar')) {\n  comando   = 'avatar';\n  argumento = msg.replace('/avatar', '').trim();\n} else if (msg.startsWith('/post')) {\n  comando   = 'post';\n  argumento = msg.replace('/post', '').trim();\n} else if (msg.startsWith('/historial')) {\n  comando   = 'historial';\n  argumento = msg.replace('/historial', '').trim() || '5';\n} else if (msg.startsWith('/publicar')) {\n  comando   = 'publicar';\n  argumento = msg.replace('/publicar', '').trim();\n} else if (msg.startsWith('/tendencias_yt')) {\n  comando = 'tendencias_yt';\n  argumento = '';\n} else if (msg.startsWith('/tendencias')) {\n  comando = 'tendencias';\n  argumento = '';\n} else if (msg.startsWith('/ayuda') || msg === '/start') {\n  comando   = 'ayuda';\n  argumento = '';\n}\n\nreturn [{ json: { ...$input.item.json, comando, argumento, es_admin } }];"
+      },
+      "id": "bcd35d54-0397-4de5-bd99-5dea49c6eb5e",
+      "name": "Detectar comando",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -24544,
+        41440
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $('Resolver intencion').item.json.comando }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "instruccion"
+            },
+            {
+              "value2": "instruccion_off"
+            },
+            {
+              "value2": "post"
+            },
+            {
+              "value2": "historial"
+            },
+            {
+              "value2": "ayuda"
+            },
+            {
+              "value2": "avatar"
+            },
+            {
+              "value2": "publicar"
+            },
+            {
+              "value2": "offsel"
+            },
+            {
+              "value2": "offyes"
+            },
+            {
+              "value2": "offno"
+            },
+            {
+              "value2": "tendencias"
+            },
+            {
+              "value2": "tendencias_yt"
+            },
+            {
+              "value2": "ytshort"
+            },
+            {
+              "value2": "ytlong"
+            },
+            {
+              "value2": "ytideas"
+            },
+            {
+              "value2": "mensaje_libre"
+            },
+            {
+              "value2": "postred"
+            }
+          ]
+        },
+        "fallbackOutput": "last"
+      },
+      "id": "4a936113-fa83-4baf-937a-e28adac4a050",
+      "name": "Router de comandos",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        -24384,
+        41568
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "clave",
+              "lookupValue": "avatar_activo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aeeb5e53-9249-4513-abd5-511b1be3ab5d",
+      "name": "Leer config avatar activo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -24208,
+        41360
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const configItems = $input.all();\nconst base = $('Restaurar contexto comando').item.json;\nconst avatar_id = configItems[0]?.json?.valor || 'sofia_01';\nreturn [{ json: { ...base, avatar_id } }];"
+      },
+      "id": "62d9997d-42d8-47f6-965c-c39183ca5605",
+      "name": "Extraer avatar activo",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -24016,
+        41360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nconst argumento = item.argumento || '';\nif (!argumento) {\n  return [{ json: { ...item, error: 'vacio', nueva_instruccion: { id: '', instruccion: '' } } }];\n}\nconst id = 'inst_' + Date.now();\nreturn [{ json: {\n  ...item,\n  nueva_instruccion: {\n    id,\n    avatar_id: item.avatar_id,\n    fecha: item.fecha,\n    hora: item.hora,\n    instruccion: argumento,\n    activa: 'SI',\n    prioridad: 'media',\n    origen: 'admin_telegram'\n  }\n} }];"
+      },
+      "id": "560feead-c18e-4644-b83c-025adde0e001",
+      "name": "Preparar instruccion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23616,
+        41120
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.GROQ_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"max_tokens\": 20,\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"Clasifica la siguiente instruccion en UNA sola palabra de estas cinco opciones exactas: tono, contenido, formato, restriccion, imagen.\\n\\nInstruccion: '{{ $json.nueva_instruccion.instruccion }}'\\n\\nResponde UNICAMENTE con una de estas palabras: tono, contenido, formato, restriccion, imagen. Sin explicacion, sin puntos, sin comillas.\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "id": "414f42cf-54c1-47f5-a6da-e880cbf52d99",
+      "name": "Clasificar tema con Groq",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23424,
+        41120
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.item.json;\nconst anterior = $('Preparar instruccion').item.json;\n\nconst temaRaw = resp.choices?.[0]?.message?.content?.trim().toLowerCase() || 'contenido';\nconst temasValidos = ['tono', 'contenido', 'formato', 'restriccion', 'imagen'];\nconst tema = temasValidos.includes(temaRaw) ? temaRaw : 'contenido';\n\nreturn [{ json: {\n  ...anterior,\n  nueva_instruccion: {\n    ...anterior.nueva_instruccion,\n    tema\n  }\n} }];"
+      },
+      "id": "40ca76dc-01ba-446d-9193-858cfa339d96",
+      "name": "Procesar tema clasificado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23232,
+        41120
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "instrucciones",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.nueva_instruccion.id }}",
+            "avatar_id": "={{ $json.nueva_instruccion.avatar_id }}",
+            "fecha": "={{ $json.nueva_instruccion.fecha }}",
+            "hora": "={{ $json.nueva_instruccion.hora }}",
+            "instruccion": "={{ $json.nueva_instruccion.instruccion }}",
+            "activa": "={{ $json.nueva_instruccion.activa }}",
+            "prioridad": "={{ $json.nueva_instruccion.prioridad }}",
+            "origen": "={{ $json.nueva_instruccion.origen }}",
+            "tema": "={{ $json.nueva_instruccion.tema }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "avatar_id",
+              "displayName": "avatar_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "hora",
+              "displayName": "hora",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "instruccion",
+              "displayName": "instruccion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "tema",
+              "displayName": "tema",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "activa",
+              "displayName": "activa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "prioridad",
+              "displayName": "prioridad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "origen",
+              "displayName": "origen",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a90789fc-c3bd-47f4-9338-ee955598fe1f",
+      "name": "Guardar instruccion en Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23040,
+        41120
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Procesar tema clasificado').item.json.chat_id }}",
+        "text": "={{\n\"✅ Instruccion guardada\\n\\n📝 \" + $json.instruccion + \"\\n\\n🏷 Tema: \" + $json.tema + \"\\n🆔 ID: \" + $json.id + \"\\n\\nUsa /instruccion_off \" + $json.id + \" para desactivarla.\"\n}}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "558e1476-0088-4e3a-a107-1aa0c6aa7faf",
+      "name": "Confirmar instruccion guardada",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -22848,
+        41120
+      ],
+      "webhookId": "e376395e-866d-49d6-8091-5caf6eedd76a",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "instrucciones"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $json.argumento }}",
+            "activa": "NO"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "activa",
+              "displayName": "activa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1db795ab-c971-447d-ba26-07a775c3aedb",
+      "name": "Desactivar instruccion en Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23616,
+        41264
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "instrucciones"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id",
+              "lookupValue": "={{ $json.id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4517b1cf-c3b1-4d9c-b9db-a47def9d4aff",
+      "name": "Leer instrucciones desactivada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23424,
+        41264
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Router de comandos').item.json.chat_id }}",
+        "text": "={{ '🔕 Instruccion desactivada. Ya no se usara en futuros posts.' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "c05d9449-ef97-4254-9573-9f09c9e56321",
+      "name": "Confirmar instruccion desactivada",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23232,
+        41264
+      ],
+      "webhookId": "a12a1218-91dd-4124-98aa-12be9756372d",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "perfil_avatar"
+        },
+        "options": {}
+      },
+      "id": "7df276d2-6f01-497c-aea3-4971899fbddc",
+      "name": "Leer perfil del avatar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23616,
+        41408
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "instrucciones"
+        },
+        "options": {}
+      },
+      "id": "0c4363ee-8374-4848-9a1f-4382d9bde497",
+      "name": "Leer instrucciones activas",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23424,
+        41408
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "historial_posts"
+        },
+        "options": {}
+      },
+      "id": "a371da36-9ee9-4dd9-bc48-49f72cb31037",
+      "name": "Leer ultimos posts",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23232,
+        41408
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const perfilItems = $('Leer perfil del avatar').all();\nconst instrItems  = $('Leer instrucciones activas').all();\nconst histItems   = $('Leer ultimos posts').all();\nconst base        = $('Extraer avatar activo').item.json;\nconst avatar_id   = base.avatar_id;\n\nconst perfil = perfilItems.find(i => i.json.avatar_id === avatar_id)?.json || perfilItems[0]?.json || {};\n\n// Instrucciones de contenido/tono/formato/restriccion (NO imagen)\nconst instrActivas = instrItems.filter(i =>\n  i.json.activa === 'SI' &&\n  i.json.avatar_id === avatar_id &&\n  i.json.tema !== 'imagen'\n);\n\nconst instrTexto = instrActivas.length > 0\n  ? instrActivas.map(i => '- ' + i.json.instruccion).join('\\n')\n  : '(sin instrucciones especiales aun)';\n\nconst instruccionesUsadas = instrActivas.map(i => i.json.id).join(', ');\n\nconst ultimosPosts = histItems.slice(-5).reverse();\nconst histTexto = ultimosPosts.length > 0\n  ? ultimosPosts.map(i => '- ' + String(i.json.texto || '').slice(0, 80)).join('\\n')\n  : '(sin posts previos)';\n\nconst partes     = String(base.argumento || '').split(' ');\nconst red_social = partes[0] || 'instagram';\nconst tema       = partes.slice(1).join(' ') || 'libre';\n\nfunction tipoContenido(red) {\n  if (red === 'instagram') return 'caption para post de Instagram';\n  if (red === 'tiktok')    return 'descripcion para TikTok';\n  if (red === 'historia')  return 'texto para historia de Instagram';\n  return 'post';\n}\n\nconst system_prompt = 'Eres un experto creador de contenido para redes sociales de influencers virtuales. Generas contenido autentico, natural y humano que parece escrito por una persona real.';\n\nconst user_prompt = `PERFIL DEL AVATAR:\nNombre: ${perfil.nombre || ''}\nEdad: ${perfil.edad || ''}\nCiudad: ${perfil.ciudad || ''}\nBio: ${perfil.bio || ''}\nTono de voz: ${perfil.tono_voz || ''}\nIntereses: ${perfil.intereses || ''}\nEjemplos de su forma de hablar (SOLO para captar el estilo, NO los copies literalmente ni los fuerces): ${perfil.frases_tipicas || ''}\nLo que nunca hace: ${perfil.lo_que_nunca_dice || ''}\n\nPAUTAS DEL PERSONAJE (integralas con naturalidad, no como lista de requisitos a cumplir):\n${instrTexto}\n\nULTIMOS POSTS (para no repetir estilo ni tema):\n${histTexto}\n\nTAREA: Genera un ${tipoContenido(red_social)} para ${red_social} sobre el tema: \"${tema}\".\n\nREQUISITOS:\n- Debe sonar completamente natural, como si lo escribiera una persona real\n- Maximo 3-5 hashtags muy especificos al final si aplica\n- Tono acorde al perfil\n- Longitud apropiada para ${red_social}\n- Incluye emojis naturales, no exagerados\n- Escribe como un mensaje espontaneo de redes, NO como un anuncio publicitario\n- Evita sonar perfecto o demasiado estructurado; las personas reales divagan un poco\n- No fuerces las frases tipicas ni las pautas: deben fluir naturalmente o no aparecer\n- Varia el inicio; no empieces siempre igual\n- NO menciones que eres IA\n\nDevuelve SOLO el texto del post, sin explicaciones ni comillas externas.`;\n\nreturn [{ json: {\n  chat_id: base.chat_id,\n  avatar_id,\n  perfil,\n  instrItems_all: instrItems.map(i => i.json),\n  red_social,\n  tema,\n  perfil_nombre: perfil.nombre || '',\n  instrucciones_usadas: instruccionesUsadas,\n  system_prompt,\n  user_prompt\n} }];"
+      },
+      "id": "1efcaf5a-760d-41cc-874c-e52ec85084b7",
+      "name": "Construir prompt del agente",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23040,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.GROQ_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"max_tokens\": 1000,\n  \"temperature\": 0.9,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": {{ JSON.stringify($json.system_prompt) }} },\n    { \"role\": \"user\",   \"content\": {{ JSON.stringify($json.user_prompt) }} }\n  ]\n}",
+        "options": {}
+      },
+      "id": "cf10768a-1cff-409e-b76e-3bbd6cf422a3",
+      "name": "Llamar a Groq LLM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -22848,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp     = $input.item.json;\nconst anterior = $('Construir prompt del agente').item.json;\n\nconst texto = resp.choices?.[0]?.message?.content?.trim() || 'Error al generar el post';\nconst post_id = 'post_' + Date.now();\n\nreturn [{ json: {\n  chat_id:              anterior.chat_id,\n  avatar_id:            anterior.avatar_id,\n  perfil:               anterior.perfil,\n  instrItems_all:       anterior.instrItems_all,\n  red_social:           anterior.red_social,\n  tema:                 anterior.tema,\n  perfil_nombre:        anterior.perfil_nombre,\n  instrucciones_usadas: anterior.instrucciones_usadas,\n  texto_generado:       texto,\n  post_id,\n  fecha: new Date().toISOString().slice(0,10),\n  hora:  new Date().toISOString().slice(0,16).replace('T',' ')\n} }];"
+      },
+      "id": "0f6586b6-b66f-4362-b160-31c44b40eec1",
+      "name": "Extraer texto generado",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -22656,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "historial_posts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "post_id": "={{ $json.post_id }}",
+            "avatar_id": "={{ $json.avatar_id }}",
+            "fecha_creacion": "={{ $json.hora }}",
+            "fecha_publicacion": "",
+            "red_social": "={{ $json.red_social }}",
+            "tipo": "post",
+            "texto": "={{ $json.texto_generado }}",
+            "imagen_url": "",
+            "estado": "borrador",
+            "instrucciones_usadas": "={{ $json.instrucciones_usadas }}",
+            "notas_admin": "",
+            "prompt_img": ""
+          },
+          "matchingColumns": [
+            "post_id"
+          ],
+          "schema": [
+            {
+              "id": "post_id",
+              "displayName": "post_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "avatar_id",
+              "displayName": "avatar_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "fecha_creacion",
+              "displayName": "fecha_creacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "fecha_publicacion",
+              "displayName": "fecha_publicacion",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "red_social",
+              "displayName": "red_social",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "tipo",
+              "displayName": "tipo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "imagen_url",
+              "displayName": "imagen_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "estado",
+              "displayName": "estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "instrucciones_usadas",
+              "displayName": "instrucciones_usadas",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "notas_admin",
+              "displayName": "notas_admin",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "prompt_img",
+              "displayName": "prompt_img",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "2c884028-de35-49ef-8839-16db645e3a8b",
+      "name": "Guardar borrador en Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -22464,
+        41408
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const anterior = $('Extraer texto generado').item.json;\nconst perfil = anterior.perfil || {};\nconst avatar_id = anterior.avatar_id;\nconst instrItems_all = anterior.instrItems_all || [];\n\n// Instrucciones de imagen activas (escena/estilo, NO identidad)\nconst instrImg = instrItems_all.filter(i =>\n  i.activa === 'SI' && i.avatar_id === avatar_id && i.tema === 'imagen'\n);\nconst instrImgTexto = instrImg.length > 0\n  ? instrImg.map(i => '- ' + i.instruccion).join('\\n')\n  : '(sin instrucciones especiales de imagen)';\n\n// SOLO estilo visual (estetica). La identidad NO se describe: viene de las 3 fotos.\nconst img_estilo = perfil.img_prompt_estilo || 'realistic candid lifestyle photo, natural lighting';\n\n// Groq genera UNICAMENTE la escena/accion/ambiente a partir del post. No describe a la persona.\nconst user_prompt = `Eres experto en componer escenas para generacion de imagenes con IA.\n\nA partir del siguiente post de redes sociales, describe SOLO la ESCENA donde estaria el personaje: el lugar, la accion que realiza, el ambiente, la hora del dia y el encuadre. NO describas el rostro, el cuerpo, el color de pelo, la piel, ni ningun rasgo fisico de la persona (eso lo aportan las fotos de referencia, no el texto).\n\nESTILO VISUAL deseado: ${img_estilo}\n\nINSTRUCCIONES DE IMAGEN (escena/estilo):\n${instrImgTexto}\n\nPOST:\n'${anterior.texto_generado}'\n\nDevuelve en INGLES, maximo 50 palabras, SOLO la descripcion de la escena y el estilo (lugar, accion, ambiente, luz, encuadre). Sin mencionar rasgos de la persona. Sin explicaciones.`;\n\nreturn [{ json: { ...anterior, user_prompt_imagen: user_prompt } }];"
+      },
+      "id": "05189710-4741-4c13-bdc5-32d6e2ec53ba",
+      "name": "Construir prompt de imagen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -22272,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.GROQ_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"max_tokens\": 200,\n  \"messages\": [\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.user_prompt_imagen) }} }\n  ]\n}",
+        "options": {}
+      },
+      "id": "71c8db1c-def0-4a0d-bb78-47f084a3ba5b",
+      "name": "Generar prompt de imagen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -22080,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const respGroq = $input.item.json;\nconst anterior = $('Construir prompt de imagen').item.json;\n\n// Escena/estilo que genero Groq (sin rasgos de la persona)\nconst escena = respGroq.choices?.[0]?.message?.content?.trim()\n  || (anterior.perfil?.img_prompt_estilo || 'realistic candid lifestyle photo, natural lighting');\n\n// La IDENTIDAD viene de las 3 fotos de referencia adjuntas, NO del texto.\n// Instruccion imperativa y prioritaria al inicio del prompt.\nconst IDENTIDAD = 'The person in this image MUST be identical to the same person shown in the attached reference images. Preserve their face, facial structure, skin tone, skin marks, vitiligo patches and all distinctive features EXACTLY as in the references — same shape, same location. Do NOT alter, stylize, add, remove, multiply or move any facial or skin feature. Only place this exact, unchanged person into the scene described below.';\n\nconst promptImagen = `${IDENTIDAD}\\n\\nSCENE AND STYLE: ${escena}`;\n\nreturn [{ json: {\n  ...anterior,\n  prompt_imagen: promptImagen\n} }];"
+      },
+      "id": "8968da21-c979-46a9-b8f0-281e78af43d1",
+      "name": "Extraer prompt de imagen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -21888,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "historial_posts"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "post_id": "={{ $('Extraer texto generado').item.json.post_id }}",
+            "imagen_url": "={{ $('Construir URL publica').item.json.imagen_url }}",
+            "prompt_img": "={{ $('Construir URL publica').item.json.prompt_imagen }}"
+          },
+          "matchingColumns": [
+            "post_id"
+          ],
+          "schema": [
+            {
+              "id": "post_id",
+              "displayName": "post_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "imagen_url",
+              "displayName": "imagen_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            },
+            {
+              "id": "prompt_img",
+              "displayName": "prompt_img",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "25ed26c1-184e-4856-9dcf-226806118b9a",
+      "name": "Guardar link img",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -20480,
+        41408
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Extraer texto generado').item.json.chat_id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "8c41b58e-82ac-4a02-93e9-6efd8237ff7e",
+      "name": "Enviar imagen",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -20160,
+        41408
+      ],
+      "webhookId": "34a72631-722a-4560-be19-8e5907aa5512",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Extraer texto generado').item.json.chat_id }}",
+        "text": "={{ '📱 ' + $('Extraer texto generado').item.json.red_social.toUpperCase() + ' — ' + $('Extraer texto generado').item.json.perfil_nombre + '\\n\\n' + $('Extraer texto generado').item.json.texto_generado + '\\n\\n🆔 Post ID: ' + $('Extraer texto generado').item.json.post_id + '\\n\\n✅ /aprobar ' + $('Extraer texto generado').item.json.post_id + '\\n❌ /rechazar ' + $('Extraer texto generado').item.json.post_id }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "7b3a1969-6086-4b10-a070-f660cffc043c",
+      "name": "Enviar texto al admin",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -19984,
+        41408
+      ],
+      "webhookId": "d5567d3c-3aca-4bf3-ac0b-77c160ebf0c3",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1U3S8QZluMFfxEYyZxJ1qUoxY-XmKsf56wlsmOko2CR8",
+          "mode": "list",
+          "cachedResultName": "Agente IA Marketing",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U3S8QZluMFfxEYyZxJ1qUoxY-XmKsf56wlsmOko2CR8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1341429720,
+          "mode": "list",
+          "cachedResultName": "config",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1U3S8QZluMFfxEYyZxJ1qUoxY-XmKsf56wlsmOko2CR8/edit#gid=1341429720"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "valor": "={{ $json.argumento }}",
+            "actualizado": "={{ $json.hora }}",
+            "clave": "avatar_activo"
+          },
+          "matchingColumns": [
+            "clave"
+          ],
+          "schema": [
+            {
+              "id": "clave",
+              "displayName": "clave",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actualizado",
+              "displayName": "actualizado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "54efdf98-7483-498f-90c0-2eff6758e2ee",
+      "name": "Actualizar avatar activo",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -24016,
+        41760
+      ],
+      "alwaysOutputData": true,
+      "retryOnFail": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Restaurar contexto comando').item.json.chat_id }}",
+        "text": "={{ '🎭 Avatar activo cambiado a: *' + $('Restaurar contexto comando').item.json.argumento + '*\\n\\nAhora todos los comandos usaran este avatar.' }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "7a82680a-61e5-4fd3-a83d-c1b8a5424476",
+      "name": "Confirmar avatar cambiado",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23808,
+        41840
+      ],
+      "webhookId": "6e04e09c-c6be-432b-ae05-7a2f74b53737",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "historial_posts"
+        },
+        "options": {}
+      },
+      "id": "791e6378-7254-4c45-8fe3-3c9d0e3bf533",
+      "name": "Leer historial para comando",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -24208,
+        41520
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items    = $input.all();\nconst base     = $('Restaurar contexto comando').item.json;\nconst cantidad = parseInt(base.argumento) || 5;\nconst ultimos  = items.slice(-cantidad).reverse();\n\nif (ultimos.length === 0) {\n  return [{ json: { chat_id: base.chat_id, texto_respuesta: 'No hay posts en el historial todavia.' } }];\n}\n\nconst lineas = ultimos.map((item, i) => {\n  const p = item.json;\n  return `${i+1}. [${p.estado || 'borrador'}] ${p.avatar_id || ''} — ${p.red_social || ''} — ${p.fecha_creacion || ''}\\n${String(p.texto || '').slice(0,80)}...`;\n});\n\nreturn [{ json: { chat_id: base.chat_id, texto_respuesta: 'Ultimos ' + ultimos.length + ' posts:\\n\\n' + lineas.join('\\n\\n') } }];"
+      },
+      "id": "7b849a73-fc80-466c-8544-fc177bf5e70e",
+      "name": "Formatear historial",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -24016,
+        41520
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto_respuesta }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "103e2103-fa17-4e7f-a914-decd4859310d",
+      "name": "Enviar historial al admin",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23808,
+        41520
+      ],
+      "webhookId": "69af12b1-623f-4ffd-bd3c-7ff44c2cae6a",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "🤖 *Panel de control — Avatar Influencer IA*\n\nSelecciona una opción:",
+        "replyMarkup": "inlineKeyboard",
+        "inlineKeyboard": {
+          "rows": [
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "🎭 Cambiar Avatar",
+                    "additionalFields": {
+                      "callback_data": "avatar:"
+                    }
+                  },
+                  {
+                    "text": "📖 Historial",
+                    "additionalFields": {
+                      "callback_data": "historial:5"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "📱 Generar Post",
+                    "additionalFields": {
+                      "callback_data": "postred:"
+                    }
+                  },
+                  {
+                    "text": "🎨 Generar Banner",
+                    "additionalFields": {
+                      "callback_data": "publicar:"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "💡 Nueva Instrucción",
+                    "additionalFields": {
+                      "callback_data": "instruccion:"
+                    }
+                  },
+                  {
+                    "text": "🔕 Desactivar Instr.",
+                    "additionalFields": {
+                      "callback_data": "instruccion_off:"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "Tendencias TikTok ⚫",
+                    "additionalFields": {
+                      "callback_data": "tendencias"
+                    }
+                  },
+                  {
+                    "text": "Tendencias YouTube 🔴",
+                    "additionalFields": {
+                      "callback_data": "tendencias_yt"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "row": {
+                "buttons": [
+                  {
+                    "text": "❓ Ayuda completa",
+                    "additionalFields": {
+                      "callback_data": "ayuda"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "35350408-61bf-4376-93fb-39cbfdfccbab",
+      "name": "Enviar ayuda",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23808,
+        41680
+      ],
+      "webhookId": "1842c80c-2c8d-4170-8a39-f630f18bee79",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.GROQ_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"max_tokens\": 300,\n  \"messages\": [\n    { \"role\": \"user\", \"content\": \"El admin del avatar virtual envio este mensaje sin usar un comando: '{{ $json.mensaje_raw }}'\\n\\nResponde de forma breve y util en maximo 3 lineas. Si parece que quiere dar una instruccion sugierele usar /instruccion. Si quiere generar contenido sugierele /post. Si quiere cambiar de avatar sugierele /avatar.\" }\n  ]\n}",
+        "options": {}
+      },
+      "id": "1ffaea49-55bc-48d3-8610-68ee0e3b82af",
+      "name": "Respuesta inteligente mensaje libre",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23808,
+        43360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.item.json;\nconst texto = resp.choices?.[0]?.message?.content?.trim() || 'No entendi el mensaje. Usa /ayuda para ver los comandos.';\nreturn [{ json: { chat_id: $('Detectar comando').item.json.chat_id, texto } }];"
+      },
+      "id": "3f81221d-bcbe-4775-86fe-d9566a08b102",
+      "name": "Extraer respuesta libre",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23616,
+        43360
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "6e3e06ba-646b-4717-bede-f1a6d719d027",
+      "name": "Enviar respuesta libre",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23424,
+        43360
+      ],
+      "webhookId": "ec5826ca-7c13-48fc-93ea-b5395df17e4b",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.comando }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "instruccion",
+              "outputKey": "NEW_INS"
+            },
+            {
+              "value2": "instruccion_off",
+              "outputKey": "INS_OFF"
+            },
+            {
+              "value2": "post",
+              "outputKey": "POST"
+            }
+          ]
+        },
+        "fallbackOutput": "last"
+      },
+      "id": "07fcaeb4-2e50-46f5-9c06-418533515778",
+      "name": "comando",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        -23824,
+        41264
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "publicidad"
+        },
+        "options": {}
+      },
+      "id": "238679e9-9fd3-43ab-9271-b74959038e7a",
+      "name": "Leer hoja publicidad",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23808,
+        42016
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst base  = $('Restaurar contexto comando').item.json;\nconst brand = (base.argumento || '').trim();\n\nconst fila = items.find(i => i.json.BRAND_NAME === brand)?.json;\nif (!fila) {\n  return [{ json: { chat_id: base.chat_id, error: 'NO_BRAND',\n    mensaje_error: '❌ No encontré la marca \"' + brand + '\" en la hoja publicidad.' } }];\n}\n\nreturn [{ json: {\n  chat_id:  base.chat_id,\n  brand:    fila,\n  error:    null\n} }];"
+      },
+      "id": "08864c74-2e2c-486e-bf36-51ad55c74572",
+      "name": "Extraer datos de campana",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23616,
+        42016
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sendPhoto",
+        "chatId": "={{ $('Decodificar banner').item.json.chat_id }}",
+        "binaryData": true,
+        "additionalFields": {
+          "caption": "={{ '🎨 Banner generado para <b>' + $('Decodificar banner').item.json.brand_name + '</b>' }}",
+          "parse_mode": "HTML"
+        }
+      },
+      "id": "4bdf56ad-6ce0-4135-bbb8-ff00f6a6715f",
+      "name": "Enviar banner al admin",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -22352,
+        41840
+      ],
+      "webhookId": "pub-banner-photo-webhook",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Decodificar banner').item.json.chat_id }}",
+        "text": "={{ '✅ Banner publicitario generado para *' + $('Decodificar banner').item.json.brand_name + '*\\n\\n🖼 Modelo: gpt-image-1\\n📐 Tamaño: 1024x1536' }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "255d1528-4459-4119-84c0-79d8b63d1976",
+      "name": "Confirmar banner generado",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -22160,
+        41840
+      ],
+      "webhookId": "pub-banner-confirm-webhook",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.mensaje_error }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "4e6a6b32-8cef-4f94-a804-b1729158b352",
+      "name": "Notificar marca no encontrada",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23120,
+        42000
+      ],
+      "webhookId": "pub-error-webhook",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-brand-found",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "NO_BRAND",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c0ef02ac-5cc7-4b94-8749-b6b19648fadc",
+      "name": "Marca encontrada?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -23440,
+        42016
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const campana = $('Extraer datos de campana').item.json;\nconst b = campana.brand;\n\nfunction driveUrl(url) {\n  if (!url || !url.trim()) return '';\n  const m = url.match(/\\/file\\/d\\/([a-zA-Z0-9_-]+)/) || url.match(/[?&]id=([a-zA-Z0-9_-]+)/);\n  return m ? `https://drive.google.com/uc?export=download&confirm=t&id=${m[1]}` : url.trim();\n}\n\nconst prompt = `${b.BRAND_NAME}. Act as a Social Media Art Director and Digital Collage Artist specializing in bold, youth-oriented brand content for Instagram and digital campaigns.\nCreate a dynamic digital collage featuring ${b.MODEL_DESCRIPTION} drinking a cold ${b.PRODUCT_NAME} with dramatic soda splashes and carbonation effects exploding around the composition.\nThe model should look ${b.MODEL_ATTITUDE}.\nThe background should feature ${b.BACKGROUND_STYLE} mixed with abstract street-style collage elements.\nUse bold ${b.PRIMARY_COLORS} color blocking inspired by ${b.BRAND_NAME} branding.\nAdd hand-painted brush strokes, ripped paper textures, graffiti graphics, spray paint effects, bold abstract shapes, layered paper collage effects, dynamic typography, grain, noise texture, and handcrafted imperfections.\nThe composition should feel ${b.MOOD}.\nThe model must be positioned ${b.MODEL_POSITION} while ${b.MODEL_ACTION} naturally.\nTypography text: \"${b.SLOGAN}\"\nPHASE 1: CONCEPTUAL FRAMEWORK — dynamic digital collage merging fashion photography with graphic design chaos.\nPHASE 2: COLOR BLOCKING — Large organic shape 40-60% in bold ${b.PRIMARY_COLORS} behind model.\nPHASE 3: GRAPHIC ELEMENTS — 3-5 abstract graphic elements scattered asymmetrically.\nPHASE 4: TEXTURE BACKGROUND — off-white textured background blended with ${b.BACKGROUND_STYLE}.\nPHASE 5: COMPOSITION — Asymmetric balance, 15-20% negative space, diagonal energy.\nTECHNICAL: Aspect Ratio ${b.ASPECT_RATIO}, ${b.RESOLUTION}, sRGB vibrant. Camera: ${b.CAMERA_ANGLE}. Lighting: ${b.LIGHTING_STYLE}. Typography: ${b.TYPOGRAPHY_STYLE}. Energy: ${b.ENERGY_LEVEL}. Audience: ${b.TARGET_AUDIENCE}. Collage: ${b.COLLAGE_INTENSITY}.\nFirst and second attached images: exact face and body reference of the model from different angles — preserve facial identity and body accurately.\nThird attached image: exact product reference — preserve label and design accurately.\nFourth attached image: exact logo reference — do not modify logo design.`;\n\nconst base = {\n  chat_id:       campana.chat_id,\n  brand_name:    b.BRAND_NAME,\n  prompt_banner: prompt\n};\n\n// Emitir hasta 4 items — omitir si el link está vacío\nconst slots = [\n  { img_slot: 'modelo1',   img_url: driveUrl(b.MODEL_IMAGE_DRIVE_LINK) },\n  { img_slot: 'modelo2',   img_url: driveUrl(b.MODEL2_IMAGE_DRIVE_LINK || '') },\n  { img_slot: 'producto',  img_url: driveUrl(b.PRODUCT_IMAGE_DRIVE_LINK) },\n  { img_slot: 'logo',      img_url: driveUrl(b.LOGO_IMAGE_DRIVE_LINK) },\n];\n\nreturn slots\n  .filter(s => s.img_url !== '')\n  .map(s => ({ json: { ...base, ...s } }));"
+      },
+      "id": "ebc973b2-7c96-47d5-802d-6b86b9765bc5",
+      "name": "Preparar 3 items de imagen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23312,
+        41840
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.img_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 25000
+        }
+      },
+      "id": "20f06b78-1899-4abe-aa3d-5f69ff53cb79",
+      "name": "HTTP Descargar imagen",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23120,
+        41840
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "id": "a0e4d6de-67d5-4920-a43c-41af6e61a07a",
+      "name": "Juntar 3 imagenes",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -22928,
+        41840
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/edits",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "data"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "data_1"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "data_2"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "data_3"
+            },
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $('Preparar 3 items de imagen').first().json.prompt_banner }}"
+            },
+            {
+              "name": "n",
+              "value": "1"
+            },
+            {
+              "name": "size",
+              "value": "1024x1536"
+            },
+            {
+              "name": "output_format",
+              "value": "png"
+            },
+            {
+              "name": "quality",
+              "value": "high"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "4091844e-a6d5-43c1-9753-5177c9f2a97f",
+      "name": "OpenAI Generar banner",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -22736,
+        41840
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b64 = $json.data?.[0]?.b64_json;\nif (!b64) throw new Error('Sin b64_json de OpenAI: ' + JSON.stringify($json).substring(0,500));\n\nconst buf = Buffer.from(b64, 'base64');\nconst binaryData = await this.helpers.prepareBinaryData(buf, 'banner.png', 'image/png');\n\n// Leer chat_id y brand_name del nodo de preparación de items\nconst itemBase = $('Preparar 3 items de imagen').first().json;\n\nreturn [{\n  json: {\n    chat_id:    itemBase.chat_id    || '',\n    brand_name: itemBase.brand_name || '',\n  },\n  binary: { data: binaryData }\n}];"
+      },
+      "id": "f7f58fa7-45ce-4d36-86ee-bb10e4dceb97",
+      "name": "Decodificar banner",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -22544,
+        41840
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "callback",
+        "queryId": "={{ $('Extraer datos del mensaje').item.json.callback_query_id }}",
+        "additionalFields": {}
+      },
+      "id": "1c870c2c-b8b7-45c6-864a-3b1c0861c732",
+      "name": "Responder callback query",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -24544,
+        41264
+      ],
+      "webhookId": "cb-answer-webhook",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-is-callback",
+              "leftValue": "={{ $json.is_callback }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f1f56ec9-25ca-4745-861a-2d74f03f22ce",
+      "name": "Es callback?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -24896,
+        41440
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "clave",
+              "lookupValue": "estado_pendiente"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "caf7d171-0fe9-4f9e-8127-12fcf126a74c",
+      "name": "Leer estado pendiente",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -25248,
+        41840
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Detectar comando').item.json;\nlet comando   = base.comando;\nlet argumento = base.argumento;\nconst is_callback = base.is_callback || false;\nconst msg = base.mensaje_raw || '';\n\n// Leer estado pendiente del config\nconst estadoItems = $input.all();\nconst estadoRow = estadoItems.find(i => i.json.clave === 'estado_pendiente');\nconst estadoValor = estadoRow?.json?.valor || '';\n\n// Comandos que requieren argumento obligatorio\nconst requierenArg = {\n  'instruccion':     { pregunta: '💡 Escribe la instrucción que quieres enseñarle al avatar:', botones: null },\n  'instruccion_off': { pregunta: '🔕 Selecciona la instrucción a desactivar:', botones: 'instrucciones' },\n  'avatar':          { pregunta: '🎭 ¿Qué avatar quieres activar?', botones: 'avatares' },\n  'publicar':        { pregunta: '🎨 ¿Para qué marca generamos el banner?', botones: 'marcas' },\n  'post':            { pregunta: '📱 Escribe el tema del post (ej: outfit de verano):', botones: null }\n};\n\n// Post necesita red + tema. Si solo trae la red (1 palabra), pedir el tema.\nfunction postFaltaTema(cmd, arg) {\n  if (cmd !== 'post') return false;\n  const partes = (arg || '').trim().split(/\\s+/).filter(Boolean);\n  return partes.length < 2; // menos de 2 palabras = falta el tema\n}\n\n// ── CASO 1: Hay estado pendiente y el usuario mandó texto libre (no comando, no callback) ──\nconst esComandoNuevo = msg.startsWith('/') || is_callback;\nif (estadoValor && !esComandoNuevo) {\n  const [cmdPendiente, extra] = estadoValor.split('|');\n  comando = cmdPendiente;\n  // Combinar extra (si existe) con el texto nuevo\n  argumento = extra ? (extra + ' ' + msg).trim() : msg.trim();\n  \n  return [{ json: {\n    ...base,\n    comando,\n    argumento,\n    accion: 'ejecutar',\n    limpiar_estado: true\n  } }];\n}\n\n// ── CASO 2: Comando nuevo que requiere argumento pero llegó vacío ──\nif (requierenArg[comando] && ((!argumento || argumento.trim() === '') || postFaltaTema(comando, argumento))) {\n  // Caso especial post: si el callback trae \"instagram libre\" o similar, igual pedir tema\n  const cfg = requierenArg[comando];\n  \n  // post desde botón trae la red ya, pero necesita tema → guardar \"post|instagram\"\n  let extraGuardar = '';\n  if (comando === 'post' && argumento && argumento.trim() !== '') {\n    extraGuardar = argumento.trim().split(' ')[0]; // la red social\n  }\n  \n  return [{ json: {\n    ...base,\n    comando,\n    accion: 'pedir',\n    pedir_pregunta: cfg.pregunta,\n    pedir_botones: cfg.botones || '',\n    estado_guardar: comando + '|' + extraGuardar\n  } }];\n}\n\n// ── CASO 3: Comando normal con argumento, o comando sin requisito ──\nreturn [{ json: {\n  ...base,\n  comando,\n  argumento,\n  accion: 'ejecutar',\n  limpiar_estado: estadoValor ? true : false\n} }];"
+      },
+      "id": "966b8869-e77a-4950-b27f-94af0b1b53a2",
+      "name": "Resolver intencion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -25072,
+        41840
+      ]
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $json.accion }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "ejecutar"
+            },
+            {
+              "value2": "pedir"
+            }
+          ]
+        },
+        "fallbackOutput": "0"
+      },
+      "id": "9e1d7744-f106-4137-a92e-c7a4fd8ccdc0",
+      "name": "Ejecutar o pedir?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        -24896,
+        41840
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "clave": "estado_pendiente",
+            "valor": "={{ $json.estado_guardar }}",
+            "actualizado": "={{ $json.hora }}",
+            "row_number": 0
+          },
+          "matchingColumns": [
+            "clave"
+          ],
+          "schema": [
+            {
+              "id": "clave",
+              "displayName": "clave",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "actualizado",
+              "displayName": "actualizado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "estado_pendiente",
+              "displayName": "estado_pendiente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "20a67451-fbc3-4277-a26b-eb31ffc9f797",
+      "name": "Guardar estado pendiente",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -25248,
+        42208
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "dataType": "string",
+        "value1": "={{ $('Resolver intencion').item.json.pedir_botones }}",
+        "rules": {
+          "rules": [
+            {
+              "value2": "avatares"
+            },
+            {
+              "value2": "marcas"
+            },
+            {
+              "value2": "instrucciones"
+            },
+            {
+              "value2": "nada"
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "4c2020fc-b9ac-4bfe-9703-951a7714940e",
+      "name": "Tipo de pregunta",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 2,
+      "position": [
+        -25072,
+        42192
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "perfil_avatar"
+        },
+        "options": {}
+      },
+      "id": "ad057e1f-3a7d-4e0e-b2db-d66e8cd12bd5",
+      "name": "Leer avatares disponibles",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -24896,
+        42048
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "publicidad"
+        },
+        "options": {}
+      },
+      "id": "12a459d9-3520-445d-ad4c-a677f19570ba",
+      "name": "Leer marcas disponibles",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -24896,
+        42208
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Resolver intencion').item.json;\nconst avatares = $input.all().map(i => i.json).filter(a => a.avatar_id);\n\nconst botones = avatares.length\n  ? avatares.map(a => [{ text: `🎭 ${a.nombre || a.avatar_id}`, callback_data: `avatar:${a.avatar_id}` }])\n  : [[{ text: '(sin avatares configurados)', callback_data: 'ayuda' }]];\n\nconst reply_markup = { inline_keyboard: botones };\n\nconst token = $vars.TELEGRAM_BOT_TOKEN;\nif (!token) throw new Error('Falta la variable TELEGRAM_BOT_TOKEN en Settings → Variables');\n\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${token}/sendMessage`,\n  body: { chat_id: base.chat_id, text: base.pedir_pregunta, reply_markup },\n  json: true\n});\n\nreturn [{ json: { ok: resp.ok, message_id: resp.result?.message_id } }];"
+      },
+      "id": "a19c15a4-70b8-4de1-9564-4b4d1134ee1d",
+      "name": "Enviar botones avatares",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -24704,
+        42048
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Resolver intencion').item.json;\nconst marcas = $input.all().map(i => i.json).filter(m => m.BRAND_NAME);\n\nconst botones = marcas.length\n  ? marcas.map(m => [{ text: `🎨 ${m.BRAND_NAME}`, callback_data: `publicar:${m.BRAND_NAME}` }])\n  : [[{ text: '(sin marcas configuradas)', callback_data: 'ayuda' }]];\n\nconst reply_markup = { inline_keyboard: botones };\n\nconst token = $vars.TELEGRAM_BOT_TOKEN;\nif (!token) throw new Error('Falta la variable TELEGRAM_BOT_TOKEN en Settings → Variables');\n\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${token}/sendMessage`,\n  body: { chat_id: base.chat_id, text: base.pedir_pregunta, reply_markup },\n  json: true\n});\n\nreturn [{ json: { ok: resp.ok, message_id: resp.result?.message_id } }];"
+      },
+      "id": "c2f40238-11d1-4ec0-b40f-bc6ca4f024b5",
+      "name": "Enviar botones marcas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -24704,
+        42208
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Resolver intencion').item.json.chat_id }}",
+        "text": "={{ $('Resolver intencion').item.json.pedir_pregunta }}",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "16ac7729-bf70-4cbf-a1b8-b811ee5d3c57",
+      "name": "Enviar pregunta texto",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -24896,
+        42544
+      ],
+      "webhookId": "estado-pregunta-webhook",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "clave": "estado_pendiente",
+            "valor": "",
+            "actualizado": "={{ $('Resolver intencion').item.json.hora }}"
+          },
+          "matchingColumns": [
+            "clave"
+          ],
+          "schema": [
+            {
+              "id": "clave",
+              "displayName": "clave",
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "required": false,
+              "display": true
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "required": false,
+              "display": true
+            },
+            {
+              "id": "actualizado",
+              "displayName": "actualizado",
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "required": false,
+              "display": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9810eb91-9b91-47a3-91a8-d42f1096ca31",
+      "name": "Limpiar estado pendiente",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -24704,
+        41664
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r1",
+              "name": "comando",
+              "value": "={{ $('Resolver intencion').item.json.comando }}",
+              "type": "string"
+            },
+            {
+              "id": "r2",
+              "name": "argumento",
+              "value": "={{ $('Resolver intencion').item.json.argumento }}",
+              "type": "string"
+            },
+            {
+              "id": "r3",
+              "name": "chat_id",
+              "value": "={{ $('Resolver intencion').item.json.chat_id }}",
+              "type": "string"
+            },
+            {
+              "id": "r4",
+              "name": "from_id",
+              "value": "={{ $('Resolver intencion').item.json.from_id }}",
+              "type": "string"
+            },
+            {
+              "id": "r5",
+              "name": "es_admin",
+              "value": "={{ $('Resolver intencion').item.json.es_admin }}",
+              "type": "boolean"
+            },
+            {
+              "id": "r6",
+              "name": "fecha",
+              "value": "={{ $('Resolver intencion').item.json.fecha }}",
+              "type": "string"
+            },
+            {
+              "id": "r7",
+              "name": "hora",
+              "value": "={{ $('Resolver intencion').item.json.hora }}",
+              "type": "string"
+            },
+            {
+              "id": "r8",
+              "name": "mensaje_raw",
+              "value": "={{ $('Resolver intencion').item.json.mensaje_raw }}",
+              "type": "string"
+            },
+            {
+              "id": "r9",
+              "name": "callback_query_id",
+              "value": "={{ $('Resolver intencion').item.json.callback_query_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "07bc8090-dcbd-4b21-a8be-6e7ab4791914",
+      "name": "Restaurar contexto comando",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -24544,
+        41664
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "clave",
+              "lookupValue": "avatar_activo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8b763e4c-70bd-4ca1-9713-1c0c6028d22d",
+      "name": "Leer avatar activo (off)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -24896,
+        42368
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "instrucciones"
+        },
+        "options": {}
+      },
+      "id": "fde68117-02cb-41c3-a187-88ce17c41a1f",
+      "name": "Leer instrucciones del avatar",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -24704,
+        42368
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Resolver intencion').item.json;\n\n// Avatar activo desde config\nconst configItems = $('Leer avatar activo (off)').all();\nconst avatar_activo = configItems.find(i => i.json.clave === 'avatar_activo')?.json?.valor || 'sofia_01';\n\n// Instrucciones activas de ESE avatar\nconst instr = $('Leer instrucciones del avatar').all()\n  .map(i => i.json)\n  .filter(x => x.activa === 'SI' && x.avatar_id === avatar_activo);\n\nlet texto, reply_markup;\nif (instr.length === 0) {\n  texto = `🔕 El avatar *${avatar_activo}* no tiene instrucciones activas para desactivar.`;\n  reply_markup = JSON.stringify({ inline_keyboard: [[{ text: '⬅️ Volver al menú', callback_data: 'ayuda' }]] });\n} else {\n  texto = `🔕 Instrucciones activas de *${avatar_activo}*. Selecciona la que quieres desactivar:`;\n  const botones = instr.map(x => {\n    const recorte = String(x.instruccion || '').slice(0, 40);\n    return [{ text: `🏷 ${x.tema || '?'}: ${recorte}${x.instruccion.length > 40 ? '…' : ''}`, callback_data: `offsel:${x.id}` }];\n  });\n  botones.push([{ text: '⬅️ Cancelar', callback_data: 'ayuda' }]);\n  reply_markup = JSON.stringify({ inline_keyboard: botones });\n}\n\nconst token = $vars.TELEGRAM_BOT_TOKEN;\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${token}/sendMessage`,\n  body: { chat_id: base.chat_id, text: texto, reply_markup, parse_mode: 'Markdown' },\n  json: true\n});\n\nreturn [{ json: { ok: resp.ok } }];"
+      },
+      "id": "97c6e806-312a-4be1-a19f-fcf14779431c",
+      "name": "Enviar botones instrucciones",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -24528,
+        42368
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "instrucciones"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "id",
+              "lookupValue": "={{ $('Restaurar contexto comando').item.json.argumento }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8f7e7c00-3029-44de-a9f7-d52072df7487",
+      "name": "Leer instruccion seleccionada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23808,
+        42160
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Restaurar contexto comando').item.json;\nconst instrItems = $input.all().map(i => i.json);\nconst instr = instrItems.find(x => x.id === base.argumento) || instrItems[0] || {};\n\nconst texto = `⚠️ ¿Confirmas desactivar esta instrucción?\\n\\n` +\n  `🏷 Tema: ${instr.tema || '?'}\\n` +\n  `📝 ${instr.instruccion || '(no encontrada)'}\\n\\n` +\n  `🆔 ${instr.id || base.argumento}`;\n\nconst reply_markup = JSON.stringify({\n  inline_keyboard: [[\n    { text: '✅ Sí, desactivar', callback_data: `offyes:${instr.id || base.argumento}` },\n    { text: '❌ No, cancelar',   callback_data: 'offno' }\n  ]]\n});\n\nconst token = $vars.TELEGRAM_BOT_TOKEN;\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${token}/sendMessage`,\n  body: { chat_id: base.chat_id, text: texto, reply_markup },\n  json: true\n});\nreturn [{ json: { ok: resp.ok } }];"
+      },
+      "id": "bc971424-a5ef-4cbb-8314-20bd66d7e92f",
+      "name": "Confirmar desactivacion",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23616,
+        42160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "instrucciones"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Restaurar contexto comando').item.json.argumento }}",
+            "activa": "NO"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "required": false,
+              "display": true,
+              "defaultMatch": true
+            },
+            {
+              "id": "activa",
+              "displayName": "activa",
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "required": false,
+              "display": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "08b6a0e3-7923-460e-8b27-cb268855b68e",
+      "name": "Desactivar confirmada",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23808,
+        42288
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Restaurar contexto comando').item.json.chat_id }}",
+        "text": "✅ Instrucción desactivada correctamente. Ya no se usará en futuros posts.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "979af54a-5927-4fc7-995a-e6d30945fd9b",
+      "name": "Aviso desactivada",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23616,
+        42288
+      ],
+      "webhookId": "off-yes-wh",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Restaurar contexto comando').item.json.chat_id }}",
+        "text": "❌ Operación cancelada. La instrucción sigue activa.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "c8afa356-c1ae-48f8-9674-29377a55e94f",
+      "name": "Aviso cancelado",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23808,
+        42432
+      ],
+      "webhookId": "off-no-wh",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Restaurar contexto comando').item.json.chat_id }}",
+        "text": "🔍 Buscando las tendencias de TikTok en Bolivia... dame unos segundos.",
+        "additionalFields": {
+          "appendAttribution": false
+        }
+      },
+      "id": "71142875-2a5c-4883-a813-e31ba76db763",
+      "name": "Aviso buscando tendencias",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -23808,
+        42576
+      ],
+      "webhookId": "trend-aviso-wh",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $('Apify TikTok trends BO').all().map(i => i.json);\n\nfunction num(n) {\n  n = Number(n) || 0;\n  if (n >= 1e9) return (n/1e9).toFixed(1)+'B';\n  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';\n  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';\n  return String(n);\n}\nfunction limpiar(t){ return String(t||'').replace(/[_*\\[\\]()~`>#+=|{}]/g,'').trim(); }\n\n// El actor devuelve items con campo 'type' (hashtag/sound/video) según el screenshot\nconst hashtags = items.filter(x => x.type === 'hashtag');\nconst sonidos  = items.filter(x => x.type === 'sound' || x.type === 'song' || x.type === 'music');\nconst videos   = items.filter(x => x.type === 'video');\n\nconst arrow = { rising:'📈', falling:'📉', stable:'➡️' };\n\nlet resumen = '';\n\nif (hashtags.length) {\n  resumen += '🏷 HASHTAGS TRENDING:\\n';\n  hashtags.slice(0,10).forEach(h => {\n    resumen += `${h.rank}. #${limpiar(h.name)} ${arrow[h.trend]||''} — ${num(h.publishedVideoCount)} videos, ${num(h.videoViews)} views\\n`;\n  });\n  resumen += '\\n';\n}\nif (sonidos.length) {\n  resumen += '🎵 SONIDOS TRENDING:\\n';\n  sonidos.slice(0,10).forEach(s => {\n    resumen += `${s.rank}. ${limpiar(s.name)} ${arrow[s.trend]||''}${s.publishedVideoCount ? ' ('+num(s.publishedVideoCount)+' videos)' : ''}\\n`;\n  });\n  resumen += '\\n';\n}\nif (videos.length) {\n  resumen += '🎬 VIDEOS VIRALES:\\n';\n  videos.slice(0,10).forEach(v => {\n    resumen += `${v.rank}. ${limpiar(v.name).slice(0,70)}${v.videoViews ? ' — '+num(v.videoViews)+' views' : ''}\\n`;\n  });\n}\n\nif (!resumen) {\n  const sample = items[0] ? Object.keys(items[0]).join(', ') : 'sin items';\n  resumen = `No se pudo clasificar.\\nItems: ${items.length}\\nClaves: ${sample}`;\n}\n\nreturn [{ json: {\n  chat_id: $('Restaurar contexto comando').item.json.chat_id,\n  resumen,\n  total: items.length\n} }];"
+      },
+      "id": "df9c65b9-13bf-4ea3-8362-b6849959afcb",
+      "name": "Combinar tendencias",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23408,
+        42576
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "clave",
+              "lookupValue": "avatar_activo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4ae09da7-a7f7-4b00-9f80-96e64768603d",
+      "name": "Leer avatar activo (trend)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23216,
+        42576
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "perfil_avatar"
+        },
+        "options": {}
+      },
+      "id": "baeb21e1-6a4f-4e6d-a70b-81f2fb5c5d74",
+      "name": "Leer perfil (trend)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23024,
+        42576
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const resumen = $('Combinar tendencias').item.json.resumen;\nconst chat_id = $('Combinar tendencias').item.json.chat_id;\n\nconst configItems = $('Leer avatar activo (trend)').all();\nconst avatar_activo = configItems.find(i => i.json.clave === 'avatar_activo')?.json?.valor || 'sofia_01';\n\nconst perfilItems = $('Leer perfil (trend)').all().map(i => i.json);\nconst perfil = perfilItems.find(p => p.avatar_id === avatar_activo) || perfilItems[0] || {};\n\nconst system = 'Eres un estratega de contenido para influencers virtuales. Analizas tendencias de TikTok y propones ideas de contenido concretas y accionables.';\n\nconst user = `AVATAR ACTIVO:\nNombre: ${perfil.nombre || avatar_activo}\nBio: ${perfil.bio || ''}\nIntereses: ${perfil.intereses || ''}\nTono: ${perfil.tono_voz || ''}\n\nTENDENCIAS ACTUALES DE TIKTOK EN BOLIVIA:\n${resumen}\n\nTAREA: Analiza estas tendencias y propón 3 ideas de contenido CONCRETAS para este avatar, conectando su perfil con las tendencias relevantes. Para cada idea indica: el hashtag/sonido a usar, el concepto del video, y por qué encaja con el avatar. Sé breve y directo. Responde en español, máximo 250 palabras. Usa emojis con moderación.`;\n\nreturn [{ json: { chat_id, system_prompt: system, user_prompt: user } }];"
+      },
+      "id": "bfd58b08-d1bc-497e-8cc1-7d1817706cd4",
+      "name": "Construir prompt tendencias",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -22832,
+        42576
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.GROQ_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"max_tokens\": 700,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": {{ JSON.stringify($json.system_prompt) }} },\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.user_prompt) }} }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "8058eb78-992f-40eb-bc54-74f4dfefbeb8",
+      "name": "Groq analiza tendencias",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -22640,
+        42576
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.item.json;\nconst texto = resp.choices?.[0]?.message?.content?.trim() || 'No se pudo analizar las tendencias.';\nconst chat_id = $('Construir prompt tendencias').item.json.chat_id;\nconst resumen = $('Combinar tendencias').item.json.resumen;\n\n// Mensaje 1: tendencias crudas | Mensaje 2: análisis\nconst mensaje = `📊 *TENDENCIAS TIKTOK BOLIVIA (últimos 7 días)*\\n\\n${resumen}\\n\\n━━━━━━━━━━━━\\n💡 *IDEAS PARA TU AVATAR*\\n\\n${texto}`;\n\nreturn [{ json: { chat_id, mensaje } }];"
+      },
+      "id": "378d8ce6-eb7b-437e-85d9-fa09c2f97248",
+      "name": "Formatear analisis tendencias",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -22448,
+        42576
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.mensaje.slice(0, 4090) }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "8300f1aa-35e9-40ff-9fb4-9d63db30eb59",
+      "name": "Enviar tendencias al admin",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -22256,
+        42576
+      ],
+      "webhookId": "trend-enviar-wh",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Restaurar contexto comando').item.json;\nconst reply_markup = JSON.stringify({\n  inline_keyboard: [\n    [{ text: '🎬 Reels / Shorts', callback_data: 'ytshort' }],\n    [{ text: '📹 Videos normales', callback_data: 'ytlong' }],\n    [{ text: '⬅️ Volver al menú', callback_data: 'ayuda' }]\n  ]\n});\nconst token = $vars.TELEGRAM_BOT_TOKEN;\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${token}/sendMessage`,\n  body: { chat_id: base.chat_id, text: '📺 *Tendencias de YouTube en Bolivia*\\n\\n¿Qué tipo de contenido quieres ver?', reply_markup, parse_mode: 'Markdown' },\n  json: true\n});\nreturn [{ json: { ok: resp.ok } }];"
+      },
+      "id": "fb8c8375-38d1-4c43-b794-ab457c41a356",
+      "name": "Menu tipo YouTube",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23808,
+        42752
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            },
+            {
+              "name": "videoDuration",
+              "value": "short"
+            },
+            {
+              "name": "regionCode",
+              "value": "BO"
+            },
+            {
+              "name": "relevanceLanguage",
+              "value": "es"
+            },
+            {
+              "name": "order",
+              "value": "viewCount"
+            },
+            {
+              "name": "publishedAfter",
+              "value": "={{ new Date(Date.now() - 30*24*60*60*1000).toISOString() }}"
+            },
+            {
+              "name": "q",
+              "value": "Bolivia viral"
+            },
+            {
+              "name": "maxResults",
+              "value": "20"
+            },
+            {
+              "name": "key",
+              "value": "={{ $vars.YOUTUBE_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "dcf6279c-a1dd-422e-a3d6-ea4558fceaef",
+      "name": "YouTube buscar shorts",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23808,
+        42896
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.item.json;\nconst videos = resp.items || [];\nfunction num(n){n=Number(n)||0;if(n>=1e9)return (n/1e9).toFixed(1)+'B';if(n>=1e6)return (n/1e6).toFixed(1)+'M';if(n>=1e3)return (n/1e3).toFixed(1)+'K';return String(n);}\nfunction limpiar(t){return String(t||'').replace(/[_*\\[\\]()~`>#+=|{}]/g,'').trim();}\nvideos.sort((a,b)=>(Number(b.statistics?.viewCount)||0)-(Number(a.statistics?.viewCount)||0));\nconst top = videos.slice(0,5);\nlet resumen='';\ntop.forEach((v,i)=>{\n  const s=v.snippet||{}, st=v.statistics||{};\n  resumen += `${i+1}. ${limpiar(s.title).slice(0,60)}\\n   👤 ${limpiar(s.channelTitle).slice(0,30)}\\n   👁 ${num(st.viewCount)}  ·  👍 ${num(st.likeCount)}  ·  💬 ${num(st.commentCount)}\\n\\n`;\n});\nif(top.length===0) resumen='No se obtuvieron resultados. Verifica la YOUTUBE_API_KEY o la cuota.';\n\n// Texto compacto para guardar en config (para que Groq lo use luego)\nconst paraGuardar = top.map((v,i)=>{\n  const s=v.snippet||{}, st=v.statistics||{};\n  return `${i+1}. ${limpiar(s.title).slice(0,70)} (${num(st.viewCount)} views)`;\n}).join(' | ');\n\nreturn [{ json: {\n  chat_id: $('Extraer IDs videos').item.json.chat_id,\n  tipo: 'short',\n  resumen,\n  resumen_compacto: paraGuardar\n} }];"
+      },
+      "id": "74027485-5a97-4bc6-9c68-05f46b7318fc",
+      "name": "Combinar videos YouTube",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23232,
+        42896
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.item.json;\nconst items = resp.items || [];\nconst ids = items.map(i => i.id?.videoId).filter(Boolean);\nreturn [{ json: { video_ids: ids.join(','), tipo: 'short', chat_id: $('Restaurar contexto comando').item.json.chat_id } }];"
+      },
+      "id": "5115737e-750c-4e85-b8ce-ac9d0dfea1f7",
+      "name": "Extraer IDs videos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23616,
+        42896
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/videos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet,statistics"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.video_ids }}"
+            },
+            {
+              "name": "key",
+              "value": "={{ $vars.YOUTUBE_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "48112ea4-70df-420b-98fc-8002fb3f1442",
+      "name": "YouTube stats videos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23424,
+        42896
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            },
+            {
+              "name": "videoDuration",
+              "value": "long"
+            },
+            {
+              "name": "regionCode",
+              "value": "BO"
+            },
+            {
+              "name": "relevanceLanguage",
+              "value": "es"
+            },
+            {
+              "name": "order",
+              "value": "viewCount"
+            },
+            {
+              "name": "publishedAfter",
+              "value": "={{ new Date(Date.now() - 7*24*60*60*1000).toISOString() }}"
+            },
+            {
+              "name": "q",
+              "value": "Bolivia"
+            },
+            {
+              "name": "maxResults",
+              "value": "15"
+            },
+            {
+              "name": "key",
+              "value": "={{ $vars.YOUTUBE_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "473a9266-4de4-4e40-96e8-5b1567ea86a7",
+      "name": "YouTube buscar largos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23808,
+        43056
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.item.json;\nconst items = resp.items || [];\nconst ids = items.map(i => i.id?.videoId).filter(Boolean);\nreturn [{ json: { video_ids: ids.join(','), tipo: 'long', chat_id: $('Restaurar contexto comando').item.json.chat_id } }];"
+      },
+      "id": "db05815e-6b8d-4c58-94d7-ecf3793d98c9",
+      "name": "Extraer IDs largos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23616,
+        43056
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.googleapis.com/youtube/v3/videos",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet,statistics"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.video_ids }}"
+            },
+            {
+              "name": "key",
+              "value": "={{ $vars.YOUTUBE_API_KEY }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "1fa2cb20-3ea5-4696-b0c9-a817a25de5a0",
+      "name": "YouTube stats largos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23424,
+        43056
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.item.json;\nconst videos = resp.items || [];\nfunction num(n){n=Number(n)||0;if(n>=1e9)return (n/1e9).toFixed(1)+'B';if(n>=1e6)return (n/1e6).toFixed(1)+'M';if(n>=1e3)return (n/1e3).toFixed(1)+'K';return String(n);}\nfunction limpiar(t){return String(t||'').replace(/[_*\\[\\]()~`>#+=|{}]/g,'').trim();}\nvideos.sort((a,b)=>(Number(b.statistics?.viewCount)||0)-(Number(a.statistics?.viewCount)||0));\nconst top = videos.slice(0,5);\nlet resumen='';\ntop.forEach((v,i)=>{\n  const s=v.snippet||{}, st=v.statistics||{};\n  resumen += `${i+1}. ${limpiar(s.title).slice(0,60)}\\n   👤 ${limpiar(s.channelTitle).slice(0,30)}\\n   👁 ${num(st.viewCount)}  ·  👍 ${num(st.likeCount)}  ·  💬 ${num(st.commentCount)}\\n\\n`;\n});\nif(top.length===0) resumen='No se obtuvieron resultados. Verifica la YOUTUBE_API_KEY o la cuota.';\n\n// Texto compacto para guardar en config (para que Groq lo use luego)\nconst paraGuardar = top.map((v,i)=>{\n  const s=v.snippet||{}, st=v.statistics||{};\n  return `${i+1}. ${limpiar(s.title).slice(0,70)} (${num(st.viewCount)} views)`;\n}).join(' | ');\n\nreturn [{ json: {\n  chat_id: $('Extraer IDs largos').item.json.chat_id,\n  tipo: 'long',\n  resumen,\n  resumen_compacto: paraGuardar\n} }];"
+      },
+      "id": "8730ffa3-8fc2-45b8-93b6-047d40505c02",
+      "name": "Combinar largos",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23232,
+        43056
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "clave": "ultimas_tendencias",
+            "valor": "={{ ($json.tipo === 'short' ? '[SHORTS] ' : '[VIDEOS] ') + $json.resumen_compacto }}",
+            "actualizado": "={{ new Date().toISOString().slice(0,16).replace('T',' ') }}"
+          },
+          "matchingColumns": [
+            "clave"
+          ],
+          "schema": [
+            {
+              "id": "clave",
+              "displayName": "clave",
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "required": false,
+              "display": true
+            },
+            {
+              "id": "valor",
+              "displayName": "valor",
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "required": false,
+              "display": true
+            },
+            {
+              "id": "actualizado",
+              "displayName": "actualizado",
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "required": false,
+              "display": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e5e50e30-eec7-4404-91a0-b155203018bc",
+      "name": "Guardar tendencias config",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -22992,
+        42896
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "let datos = null;\ntry { const d = $('Combinar videos YouTube').item.json; if (d && d.resumen) datos = d; } catch(e) {}\nif (!datos) { try { const d = $('Combinar largos').item.json; if (d && d.resumen) datos = d; } catch(e) {} }\nif (!datos) datos = $input.item.json;\n\nconst chat_id = datos.chat_id;\nconst tipo = datos.tipo === 'short' ? 'SHORTS' : 'VIDEOS';\nconst resumen = datos.resumen || 'Sin datos.';\n\nconst mensaje = `📱 *YOUTUBE ${tipo} · BOLIVIA*\\n_Top 5 más vistos · últimos 7 días_\\n\\n${resumen}`;\n\nconst reply_markup = JSON.stringify({\n  inline_keyboard: [\n    [{ text: '💡 Generar sugerencias', callback_data: 'ytideas' }],\n    [{ text: '⬅️ Volver al menú', callback_data: 'ayuda' }]\n  ]\n});\n\nconst token = $vars.TELEGRAM_BOT_TOKEN;\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${token}/sendMessage`,\n  body: { chat_id, text: mensaje.slice(0,4090), reply_markup, parse_mode: 'Markdown' },\n  json: true\n});\nreturn [{ json: { ok: resp.ok } }];"
+      },
+      "id": "ac17b942-6dfd-4dfd-8081-4fced49a05cd",
+      "name": "Enviar tendencias YouTube",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -22992,
+        43056
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "clave",
+              "lookupValue": "ultimas_tendencias"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "3f8145d9-ea78-43f3-91e1-b7e8fc8dad0b",
+      "name": "Leer ultimas tendencias",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23808,
+        43200
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "config"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "clave",
+              "lookupValue": "avatar_activo"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "24f3c447-c587-45de-bd2a-4e0e30f330d9",
+      "name": "Leer avatar activo (ideas)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23616,
+        43200
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "mode": "id",
+          "value": "={{ $vars.GOOGLE_SHEET_ID }}"
+        },
+        "sheetName": {
+          "mode": "name",
+          "value": "perfil_avatar"
+        },
+        "options": {}
+      },
+      "id": "00053759-8fba-426d-97b7-5224f1b44987",
+      "name": "Leer perfil (ideas)",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -23424,
+        43200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "f64uQb9BD9jT57ru",
+          "name": "Google Sheets OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const trendsRow = $('Leer ultimas tendencias').all().find(i => i.json.clave === 'ultimas_tendencias');\nconst tendencias = trendsRow?.json?.valor || '(sin tendencias guardadas, pide primero las tendencias)';\n\nconst cfg = $('Leer avatar activo (ideas)').all();\nconst avatar_activo = cfg.find(i => i.json.clave === 'avatar_activo')?.json?.valor || 'sofia_01';\n\nconst perfilItems = $('Leer perfil (ideas)').all().map(i => i.json);\nconst perfil = perfilItems.find(p => p.avatar_id === avatar_activo) || perfilItems[0] || {};\n\nconst chat_id = $('Restaurar contexto comando').item.json.chat_id;\n\nconst system = 'Eres un estratega de contenido para influencers virtuales. Analizas tendencias de YouTube y propones ideas de contenido concretas y accionables.';\nconst user = `AVATAR ACTIVO:\nNombre: ${perfil.nombre || avatar_activo}\nBio: ${perfil.bio || ''}\nIntereses: ${perfil.intereses || ''}\nTono: ${perfil.tono_voz || ''}\n\nTENDENCIAS RECOPILADAS DE YOUTUBE BOLIVIA:\n${tendencias}\n\nTAREA: Analiza estas tendencias y propón 3 ideas de contenido CONCRETAS para este avatar, conectando su perfil con los temas que funcionan. Para cada idea indica: tema/formato, concepto, y por qué encaja. Breve y directo. Español, máximo 250 palabras. Emojis con moderación.`;\n\nreturn [{ json: { chat_id, system_prompt: system, user_prompt: user } }];"
+      },
+      "id": "6814353c-d656-41d6-96af-953b83604812",
+      "name": "Construir prompt ideas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23232,
+        43200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.GROQ_API_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"llama-3.3-70b-versatile\",\n  \"max_tokens\": 700,\n  \"messages\": [\n    { \"role\": \"system\", \"content\": {{ JSON.stringify($json.system_prompt) }} },\n    { \"role\": \"user\", \"content\": {{ JSON.stringify($json.user_prompt) }} }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "8570266a-7c0f-420d-82e0-4d4caecd3267",
+      "name": "Groq ideas YouTube",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23040,
+        43200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const resp = $input.item.json;\nconst texto = resp.choices?.[0]?.message?.content?.trim() || 'No se pudo generar.';\nconst chat_id = $('Construir prompt ideas').item.json.chat_id;\nconst mensaje = `💡 *IDEAS DE CONTENIDO PARA TU AVATAR*\\n_Basadas en las últimas tendencias de YouTube_\\n\\n${texto}`;\nreturn [{ json: { chat_id, mensaje } }];"
+      },
+      "id": "30d5e781-8c66-4ee2-837a-b543fb2144a0",
+      "name": "Formatear ideas YouTube",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -22848,
+        43200
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.chat_id }}",
+        "text": "={{ $json.mensaje.slice(0,4090) }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "Markdown"
+        }
+      },
+      "id": "382fa829-34fb-408b-9933-4c7b1eb082d5",
+      "name": "Enviar ideas al admin",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -22656,
+        43200
+      ],
+      "webhookId": "yt-ideas-wh",
+      "credentials": {
+        "telegramApi": {
+          "id": "Gd4sAQlmkCIdXEGq",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.apify.com/v2/acts/automation-lab~tiktok-trends-scraper/run-sync-get-dataset-items?token={{ $vars.APIFY_API_KEY }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"countryCode\": \"BO\", \"period\": 7, \"maxResults\": 10}",
+        "options": {
+          "timeout": 280000
+        }
+      },
+      "id": "8021043f-2628-4d4a-911a-bafdd93ebba1",
+      "name": "Apify TikTok trends BO",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -23616,
+        42576
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const anterior = $('Extraer prompt de imagen').item.json;\nconst perfil   = anterior.perfil || {};\nconst tg       = $('Extraer texto generado').item.json;\n\nfunction driveDirect(url) {\n  if (!url) return '';\n  const m = String(url).match(/[-\\w]{25,}/);\n  return m ? `https://drive.google.com/uc?export=download&id=${m[0]}` : '';\n}\n\nconst CARPETA_GENERADAS_ID = 'PEGAR_FOLDER_ID_DE_GENERADAS';\n\nconst refs = [\n  driveDirect(perfil.img_ref_frente_link),\n  driveDirect(perfil.img_ref_perfil_link),\n  driveDirect(perfil.img_ref_cuerpo_link),\n];\nif (refs.some(u => u === '')) {\n  throw new Error('El avatar debe tener las 3 fotos de referencia en perfil_avatar (img_ref_frente_link, img_ref_perfil_link, img_ref_cuerpo_link).');\n}\nconst base = {\n  prompt_imagen: anterior.prompt_imagen,\n  post_id: tg.post_id, chat_id: tg.chat_id,\n  carpeta_generadas_id: CARPETA_GENERADAS_ID,\n};\nreturn refs.map(img_url => ({ json: { ...base, img_url } }));"
+      },
+      "id": "a1af8f31-3b76-4ba2-8e55-f11a6d3b4a4e",
+      "name": "Preparar items de referencia",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -21728,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.img_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          },
+          "timeout": 25000
+        }
+      },
+      "id": "c41de3f1-a87b-42a3-8828-166fbdf1b9a7",
+      "name": "HTTP Descargar referencia",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -21536,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {
+          "includeBinaries": true
+        }
+      },
+      "id": "b5a4c2cc-647b-4522-a4df-0f49927e59c9",
+      "name": "Juntar referencias",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -21360,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/images/edits",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $vars.OPENAI_API_KEY }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "data"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "data_1"
+            },
+            {
+              "parameterType": "formBinaryData",
+              "name": "image[]",
+              "inputDataFieldName": "data_2"
+            },
+            {
+              "name": "model",
+              "value": "gpt-image-1"
+            },
+            {
+              "name": "prompt",
+              "value": "={{ $('Preparar items de referencia').first().json.prompt_imagen }}"
+            },
+            {
+              "name": "n",
+              "value": "1"
+            },
+            {
+              "name": "size",
+              "value": "1024x1536"
+            },
+            {
+              "name": "output_format",
+              "value": "png"
+            },
+            {
+              "name": "quality",
+              "value": "high"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          },
+          "timeout": 120000
+        }
+      },
+      "id": "3ccc1937-5d0a-4247-867d-5c4fa19f6084",
+      "name": "OpenAI Generar imagen avatar",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -21184,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const b64 = $json.data?.[0]?.b64_json;\nif (!b64) throw new Error('Sin b64_json de OpenAI: ' + JSON.stringify($json).substring(0,500));\nconst buf = Buffer.from(b64, 'base64');\nconst binaryData = await this.helpers.prepareBinaryData(buf, 'avatar.png', 'image/png');\nconst itemBase = $('Preparar items de referencia').first().json;\nreturn [{\n  json: {\n    post_id: itemBase.post_id, chat_id: itemBase.chat_id,\n    prompt_imagen: itemBase.prompt_imagen,\n    carpeta_generadas_id: itemBase.carpeta_generadas_id,\n  },\n  binary: { data: binaryData }\n}];"
+      },
+      "id": "a25b0d96-8c67-43b3-9bc3-9b725d730a64",
+      "name": "Decodificar imagen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -21008,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.post_id }}.png",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "=https://drive.google.com/drive/folders/1d2tWHGlaQVGG3g6-MABNXIMStSzoAhS6",
+          "mode": "url"
+        },
+        "options": {}
+      },
+      "id": "cf30ece0-e404-44cc-bdad-a797889c6a42",
+      "name": "Subir a Drive",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -20848,
+        41408
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "9GO9gyA0Yq2WPy09",
+          "name": "Google Drive OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dec = $('Decodificar imagen').item.json;\nconst fileId = $json.id || $json.fileId;\nconst imagen_url = `https://drive.google.com/uc?id=${fileId}`;\nreturn [{ json: {\n  post_id: dec.post_id, chat_id: dec.chat_id,\n  prompt_imagen: dec.prompt_imagen, imagen_url\n}}];"
+      },
+      "id": "90535adf-c551-421f-a61c-bf615a5b4f5f",
+      "name": "Construir URL publica",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20672,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recupera el binario generado por 'Decodificar imagen' (se pierde al pasar por Sheets)\nconst dec = $('Decodificar imagen').item;\nconst tg  = $('Extraer texto generado').item.json;\nreturn [{\n  json: { chat_id: tg.chat_id, post_id: tg.post_id },\n  binary: { data: dec.binary.data }\n}];"
+      },
+      "id": "469aac3f-ae4a-4173-9960-d127aba00819",
+      "name": "Recuperar binario imagen",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20320,
+        41408
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const base = $('Restaurar contexto comando').item.json;\nconst reply_markup = JSON.stringify({\n  inline_keyboard: [\n    [{ text: '📸 Instagram', callback_data: 'post:instagram' }],\n    [{ text: '🎵 TikTok',    callback_data: 'post:tiktok' }],\n    [{ text: '📖 Historia',  callback_data: 'post:historia' }],\n    [{ text: '⬅️ Volver al menú', callback_data: 'ayuda' }]\n  ]\n});\nconst token = $vars.TELEGRAM_BOT_TOKEN;\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: `https://api.telegram.org/bot${token}/sendMessage`,\n  body: { chat_id: base.chat_id, text: '📱 *Generar Post*\\n\\n¿En qué red social quieres publicar?', reply_markup, parse_mode: 'Markdown' },\n  json: true\n});\nreturn [{ json: { ok: resp.ok } }];"
+      },
+      "id": "f1a10010-0000-4a00-9000-aaaaaaaaaa10",
+      "name": "Menu redes post",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -23808,
+        42932
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram — Recibir mensaje": {
+      "main": [
+        [
+          {
+            "node": "Extraer datos del mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer datos del mensaje": {
+      "main": [
+        [
+          {
+            "node": "Es callback?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detectar comando": {
+      "main": [
+        [
+          {
+            "node": "Leer estado pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Router de comandos": {
+      "main": [
+        [
+          {
+            "node": "Leer config avatar activo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer config avatar activo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer config avatar activo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer historial para comando",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar ayuda",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Actualizar avatar activo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer hoja publicidad",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer instruccion seleccionada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Desactivar confirmada",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso cancelado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aviso buscando tendencias",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Menu tipo YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "YouTube buscar shorts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "YouTube buscar largos",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer ultimas tendencias",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respuesta inteligente mensaje libre",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Menu redes post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer config avatar activo": {
+      "main": [
+        [
+          {
+            "node": "Extraer avatar activo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer avatar activo": {
+      "main": [
+        [
+          {
+            "node": "comando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar instruccion": {
+      "main": [
+        [
+          {
+            "node": "Clasificar tema con Groq",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar tema con Groq": {
+      "main": [
+        [
+          {
+            "node": "Procesar tema clasificado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar tema clasificado": {
+      "main": [
+        [
+          {
+            "node": "Guardar instruccion en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar instruccion en Sheets": {
+      "main": [
+        [
+          {
+            "node": "Confirmar instruccion guardada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Desactivar instruccion en Sheets": {
+      "main": [
+        [
+          {
+            "node": "Leer instrucciones desactivada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer instrucciones desactivada": {
+      "main": [
+        [
+          {
+            "node": "Confirmar instruccion desactivada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer perfil del avatar": {
+      "main": [
+        [
+          {
+            "node": "Leer instrucciones activas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer instrucciones activas": {
+      "main": [
+        [
+          {
+            "node": "Leer ultimos posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer ultimos posts": {
+      "main": [
+        [
+          {
+            "node": "Construir prompt del agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir prompt del agente": {
+      "main": [
+        [
+          {
+            "node": "Llamar a Groq LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Llamar a Groq LLM": {
+      "main": [
+        [
+          {
+            "node": "Extraer texto generado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer texto generado": {
+      "main": [
+        [
+          {
+            "node": "Guardar borrador en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar borrador en Sheets": {
+      "main": [
+        [
+          {
+            "node": "Construir prompt de imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir prompt de imagen": {
+      "main": [
+        [
+          {
+            "node": "Generar prompt de imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generar prompt de imagen": {
+      "main": [
+        [
+          {
+            "node": "Extraer prompt de imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer prompt de imagen": {
+      "main": [
+        [
+          {
+            "node": "Preparar items de referencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar link img": {
+      "main": [
+        [
+          {
+            "node": "Recuperar binario imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar imagen": {
+      "main": [
+        [
+          {
+            "node": "Enviar texto al admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar avatar activo": {
+      "main": [
+        [
+          {
+            "node": "Confirmar avatar cambiado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer historial para comando": {
+      "main": [
+        [
+          {
+            "node": "Formatear historial",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear historial": {
+      "main": [
+        [
+          {
+            "node": "Enviar historial al admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respuesta inteligente mensaje libre": {
+      "main": [
+        [
+          {
+            "node": "Extraer respuesta libre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer respuesta libre": {
+      "main": [
+        [
+          {
+            "node": "Enviar respuesta libre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "comando": {
+      "main": [
+        [
+          {
+            "node": "Preparar instruccion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Desactivar instruccion en Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer perfil del avatar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer hoja publicidad": {
+      "main": [
+        [
+          {
+            "node": "Extraer datos de campana",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer datos de campana": {
+      "main": [
+        [
+          {
+            "node": "Marca encontrada?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marca encontrada?": {
+      "main": [
+        [
+          {
+            "node": "Preparar 3 items de imagen",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Notificar marca no encontrada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar banner al admin": {
+      "main": [
+        [
+          {
+            "node": "Confirmar banner generado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar 3 items de imagen": {
+      "main": [
+        [
+          {
+            "node": "HTTP Descargar imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Descargar imagen": {
+      "main": [
+        [
+          {
+            "node": "Juntar 3 imagenes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Juntar 3 imagenes": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Generar banner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Generar banner": {
+      "main": [
+        [
+          {
+            "node": "Decodificar banner",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decodificar banner": {
+      "main": [
+        [
+          {
+            "node": "Enviar banner al admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Es callback?": {
+      "main": [
+        [
+          {
+            "node": "Responder callback query",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Detectar comando",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Detectar comando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer estado pendiente": {
+      "main": [
+        [
+          {
+            "node": "Resolver intencion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolver intencion": {
+      "main": [
+        [
+          {
+            "node": "Ejecutar o pedir?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ejecutar o pedir?": {
+      "main": [
+        [
+          {
+            "node": "Limpiar estado pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Guardar estado pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar estado pendiente": {
+      "main": [
+        [
+          {
+            "node": "Restaurar contexto comando",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar estado pendiente": {
+      "main": [
+        [
+          {
+            "node": "Tipo de pregunta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tipo de pregunta": {
+      "main": [
+        [
+          {
+            "node": "Leer avatares disponibles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer marcas disponibles",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Leer avatar activo (off)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Enviar pregunta texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer avatares disponibles": {
+      "main": [
+        [
+          {
+            "node": "Enviar botones avatares",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer marcas disponibles": {
+      "main": [
+        [
+          {
+            "node": "Enviar botones marcas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restaurar contexto comando": {
+      "main": [
+        [
+          {
+            "node": "Router de comandos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer avatar activo (off)": {
+      "main": [
+        [
+          {
+            "node": "Leer instrucciones del avatar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer instrucciones del avatar": {
+      "main": [
+        [
+          {
+            "node": "Enviar botones instrucciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer instruccion seleccionada": {
+      "main": [
+        [
+          {
+            "node": "Confirmar desactivacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Desactivar confirmada": {
+      "main": [
+        [
+          {
+            "node": "Aviso desactivada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aviso buscando tendencias": {
+      "main": [
+        [
+          {
+            "node": "Apify TikTok trends BO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combinar tendencias": {
+      "main": [
+        [
+          {
+            "node": "Leer avatar activo (trend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer avatar activo (trend)": {
+      "main": [
+        [
+          {
+            "node": "Leer perfil (trend)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer perfil (trend)": {
+      "main": [
+        [
+          {
+            "node": "Construir prompt tendencias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir prompt tendencias": {
+      "main": [
+        [
+          {
+            "node": "Groq analiza tendencias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq analiza tendencias": {
+      "main": [
+        [
+          {
+            "node": "Formatear analisis tendencias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear analisis tendencias": {
+      "main": [
+        [
+          {
+            "node": "Enviar tendencias al admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combinar videos YouTube": {
+      "main": [
+        [
+          {
+            "node": "Guardar tendencias config",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar tendencias YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube buscar shorts": {
+      "main": [
+        [
+          {
+            "node": "Extraer IDs videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer IDs videos": {
+      "main": [
+        [
+          {
+            "node": "YouTube stats videos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube stats videos": {
+      "main": [
+        [
+          {
+            "node": "Combinar videos YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube buscar largos": {
+      "main": [
+        [
+          {
+            "node": "Extraer IDs largos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer IDs largos": {
+      "main": [
+        [
+          {
+            "node": "YouTube stats largos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube stats largos": {
+      "main": [
+        [
+          {
+            "node": "Combinar largos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combinar largos": {
+      "main": [
+        [
+          {
+            "node": "Guardar tendencias config",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Enviar tendencias YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer ultimas tendencias": {
+      "main": [
+        [
+          {
+            "node": "Leer avatar activo (ideas)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer avatar activo (ideas)": {
+      "main": [
+        [
+          {
+            "node": "Leer perfil (ideas)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer perfil (ideas)": {
+      "main": [
+        [
+          {
+            "node": "Construir prompt ideas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir prompt ideas": {
+      "main": [
+        [
+          {
+            "node": "Groq ideas YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq ideas YouTube": {
+      "main": [
+        [
+          {
+            "node": "Formatear ideas YouTube",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatear ideas YouTube": {
+      "main": [
+        [
+          {
+            "node": "Enviar ideas al admin",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify TikTok trends BO": {
+      "main": [
+        [
+          {
+            "node": "Combinar tendencias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar items de referencia": {
+      "main": [
+        [
+          {
+            "node": "HTTP Descargar referencia",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Descargar referencia": {
+      "main": [
+        [
+          {
+            "node": "Juntar referencias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Juntar referencias": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Generar imagen avatar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Generar imagen avatar": {
+      "main": [
+        [
+          {
+            "node": "Decodificar imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decodificar imagen": {
+      "main": [
+        [
+          {
+            "node": "Subir a Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir a Drive": {
+      "main": [
+        [
+          {
+            "node": "Construir URL publica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL publica": {
+      "main": [
+        [
+          {
+            "node": "Guardar link img",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recuperar binario imagen": {
+      "main": [
+        [
+          {
+            "node": "Enviar imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "367bee37-f5f5-44de-ae30-d7145c3966b9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ce939f814c698f4ea5ecf51dc015e8f0e2a5fc40b0e24608c77a51955fdb69ee"
+  },
+  "id": "lnNeElXzbsgre25l",
+  "tags": []
+}
