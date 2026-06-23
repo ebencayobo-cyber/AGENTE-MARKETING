@@ -1,0 +1,128 @@
+{
+ "name": "TEST - Publicar IG (aislado)",
+ "nodes": [
+  {
+   "parameters": {},
+   "name": "Ejecutar prueba",
+   "type": "n8n-nodes-base.manualTrigger",
+   "typeVersion": 1,
+   "position": [
+    400,
+    300
+   ],
+   "id": "node-trigger"
+  },
+  {
+   "parameters": {
+    "jsCode": "// Datos fijos solo para esta prueba\nreturn [{ json: {\n  ig_user_id: '27284440157843038',\n  ig_access_token: 'IGAAS4ot6UMINBZAFpUc1MwdGRyUG1pc193X3FmWnJ0ZAUJmaXR6S_REEMPLAZA_CON_TOKEN_COMPLETO',\n  imagen_url_publica: 'https://lh3.googleusercontent.com/d/17BbuEHHysF3NcuhBYUnS8cLS0QQZH0qx=s1440',\n  texto: \"Prueba de publicacion automatica vía API 🤖 #test\"\n} }];"
+   },
+   "name": "Datos de prueba",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    620,
+    300
+   ],
+   "id": "node-datos"
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "={{ 'https://graph.instagram.com/v22.0/' + $json.ig_user_id + '/media' }}",
+    "sendQuery": true,
+    "queryParameters": {
+     "parameters": [
+      {
+       "name": "image_url",
+       "value": "={{ $json.imagen_url_publica }}"
+      },
+      {
+       "name": "caption",
+       "value": "={{ $json.texto }}"
+      },
+      {
+       "name": "access_token",
+       "value": "={{ $json.ig_access_token }}"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "name": "IG Crear contenedor",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    840,
+    300
+   ],
+   "id": "node-crear"
+  },
+  {
+   "parameters": {
+    "method": "POST",
+    "url": "={{ 'https://graph.instagram.com/v22.0/' + $('Datos de prueba').item.json.ig_user_id + '/media_publish' }}",
+    "sendQuery": true,
+    "queryParameters": {
+     "parameters": [
+      {
+       "name": "creation_id",
+       "value": "={{ $json.id }}"
+      },
+      {
+       "name": "access_token",
+       "value": "={{ $('Datos de prueba').item.json.ig_access_token }}"
+      }
+     ]
+    },
+    "options": {}
+   },
+   "name": "IG Publicar contenedor",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    1060,
+    300
+   ],
+   "id": "node-publicar"
+  }
+ ],
+ "connections": {
+  "Ejecutar prueba": {
+   "main": [
+    [
+     {
+      "node": "Datos de prueba",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "Datos de prueba": {
+   "main": [
+    [
+     {
+      "node": "IG Crear contenedor",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "IG Crear contenedor": {
+   "main": [
+    [
+     {
+      "node": "IG Publicar contenedor",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  }
+ },
+ "settings": {
+  "executionOrder": "v1"
+ },
+ "active": false
+}
